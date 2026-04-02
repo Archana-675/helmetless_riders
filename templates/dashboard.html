@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Traffic Violation Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: linear-gradient(135deg, #f0f4f8 0%, #d9e2ec 100%);
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col pt-6 px-4 pb-12 sm:px-6 lg:px-8">
+
+    <!-- Navbar -->
+    <nav class="glass-card rounded-2xl mx-auto w-full max-w-7xl px-6 py-4 mb-8 flex justify-between items-center z-10 sticky top-4">
+        <div class="flex items-center space-x-3">
+            <div class="bg-blue-600 text-white p-2 rounded-lg">
+                <i class="fas fa-shield-alt text-xl"></i>
+            </div>
+            <h1 class="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-700 to-indigo-600 tracking-tight">Traffic Monitor</h1>
+        </div>
+        <div>
+            <a href="/logout" class="flex items-center space-x-2 bg-white text-slate-700 hover:text-red-600 hover:bg-red-50 border border-slate-200 transition-all duration-300 font-medium rounded-xl text-sm px-5 py-2.5 shadow-sm">
+                <i class="fas fa-sign-out-alt"></i>
+                <span>Logout</span>
+            </a>
+        </div>
+    </nav>
+
+    <main class="w-full max-w-7xl mx-auto flex-grow flex flex-col">
+        <!-- Dashboard Stats -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <!-- Total Violations -->
+            <div class="glass-card rounded-2xl p-6 relative overflow-hidden group hover:shadow-lg transition-all duration-300">
+                <div class="absolute -right-4 -top-4 w-24 h-24 bg-blue-100 rounded-full opacity-50 group-hover:scale-110 transition-transform duration-500 text-blue-500 flex items-center justify-center">
+                    <i class="fas fa-car text-3xl opacity-20"></i>
+                </div>
+                <h3 class="text-slate-500 text-sm font-semibold uppercase tracking-wider mb-2">Total Violations</h3>
+                <div class="flex items-end space-x-3">
+                    <span class="text-4xl font-bold text-slate-800">{{ total }}</span>
+                </div>
+            </div>
+
+            <!-- Without Helmet -->
+            <div class="glass-card rounded-2xl p-6 relative overflow-hidden group hover:shadow-lg transition-all duration-300 border-l-4 border-l-red-500">
+                <div class="absolute -right-4 -top-4 w-24 h-24 bg-red-100 rounded-full opacity-50 group-hover:scale-110 transition-transform duration-500 text-red-500 flex items-center justify-center">
+                    <i class="fas fa-exclamation-triangle text-3xl opacity-20"></i>
+                </div>
+                <h3 class="text-red-500 text-sm font-semibold uppercase tracking-wider mb-2">Without Helmet</h3>
+                <div class="flex items-end space-x-3">
+                    <span class="text-4xl font-bold text-slate-800">{{ nohelmet }}</span>
+                </div>
+            </div>
+
+            <!-- With Helmet -->
+            <div class="glass-card rounded-2xl p-6 relative overflow-hidden group hover:shadow-lg transition-all duration-300 border-l-4 border-l-emerald-500">
+                <div class="absolute -right-4 -top-4 w-24 h-24 bg-emerald-100 rounded-full opacity-50 group-hover:scale-110 transition-transform duration-500 text-emerald-500 flex items-center justify-center">
+                    <i class="fas fa-check-circle text-3xl opacity-20"></i>
+                </div>
+                <h3 class="text-emerald-600 text-sm font-semibold uppercase tracking-wider mb-2">With Helmet</h3>
+                <div class="flex items-end space-x-3">
+                    <span class="text-4xl font-bold text-slate-800">{{ helmet }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Data Table -->
+        <div class="glass-card rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex-grow flex flex-col">
+            <div class="px-6 py-5 border-b border-slate-100 bg-white/50 backdrop-blur-sm flex justify-between items-center">
+                <h2 class="text-lg font-semibold text-slate-800">Recent Violations</h2>
+                <div class="text-sm text-slate-500">Live Updates Enabled</div>
+            </div>
+            
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-slate-50/50 text-slate-500 text-xs uppercase tracking-wider">
+                            <th class="px-6 py-4 font-medium whitespace-nowrap">Capture Image</th>
+                            <th class="px-6 py-4 font-medium whitespace-nowrap">Vehicle Plate</th>
+                            <th class="px-6 py-4 font-medium whitespace-nowrap">Timestamp</th>
+                            <th class="px-6 py-4 font-medium whitespace-nowrap">Violation Type</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100">
+                        {% if data %}
+                            {% for row in data|reverse %}
+                            <tr class="hover:bg-blue-50/30 transition-colors">
+                                <td class="px-6 py-4 align-middle">
+                                    <div class="w-24 h-16 rounded-lg overflow-hidden border border-slate-200 shadow-sm cursor-pointer hover:scale-105 transition-transform" onclick="window.open('{{ row[3] }}', '_blank')">
+                                        <img src="{{ row[3] }}" alt="Violation Image" class="w-full h-full object-cover" onerror="this.src='https://via.placeholder.com/150?text=No+Image'">
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 align-middle">
+                                    <div class="inline-flex items-center px-3 py-1 rounded-md bg-slate-100 border border-slate-200 text-slate-800 font-mono font-bold tracking-widest text-sm shadow-inner">
+                                        {{ row[0] }}
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 align-middle whitespace-nowrap">
+                                    <div class="text-sm text-slate-600 flex items-center">
+                                        <i class="far fa-clock mr-2 text-slate-400"></i>
+                                        {{ row[1] }}
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 align-middle">
+                                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-red-100 text-red-700 whitespace-nowrap">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-red-500 mr-1.5"></span>
+                                        {{ row[2] }}
+                                    </span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="4" class="px-6 py-12 text-center text-slate-500">
+                                    <div class="flex flex-col items-center justify-center">
+                                        <i class="fas fa-inbox text-4xl text-slate-300 mb-3"></i>
+                                        <p class="text-lg">No violation records found</p>
+                                        <p class="text-sm text-slate-400 mt-1">When violations are detected, they will appear here</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+            <div class="bg-slate-50/50 px-6 py-4 border-t border-slate-100 text-sm text-center text-slate-500 w-full mt-auto">
+                Real-time traffic monitoring system powered by AI
+            </div>
+        </div>
+    </main>
+
+</body>
+</html>
